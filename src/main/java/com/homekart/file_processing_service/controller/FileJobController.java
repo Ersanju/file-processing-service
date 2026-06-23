@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.homekart.file_processing_service.dto.UploadResponse;
 import com.homekart.file_processing_service.model.FileJob;
 import com.homekart.file_processing_service.service.FileJobService;
+import com.homekart.file_processing_service.service.ProcessingMetrics;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 public class FileJobController {
 
     private final FileJobService fileJobService;
+    private final ProcessingMetrics processingMetrics;
 
     @PostMapping("/upload")
     public ResponseEntity<UploadResponse> getFile(@RequestParam("file") MultipartFile file)
@@ -40,6 +42,12 @@ public class FileJobController {
 
         return ResponseEntity.ok(
                 fileJobService.getFileJob(jobId));
+    }
+
+    @GetMapping("/metrics")
+    public int getMetrics() {
+
+        return processingMetrics.getProcessedFiles();
     }
 
 }

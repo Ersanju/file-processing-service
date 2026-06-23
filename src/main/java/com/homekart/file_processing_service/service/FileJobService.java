@@ -21,6 +21,7 @@ public class FileJobService {
     private final FileJobRepository fileJobRepository;
     private final FileProcessingQueue queue;
     private final ProcessingService processingService;
+    private final ProcessingMetrics processingMetrics;
 
     public String uploadFile(MultipartFile file) throws IOException {
 
@@ -87,6 +88,7 @@ public class FileJobService {
             fileJob.setStatus("COMPLETED");
             fileJob.setProcessedTime(LocalDateTime.now());
             fileJobRepository.update(fileJob);
+            processingMetrics.increment();
 
             System.out.println("Processing completed for Job: " + jobId);
         } catch (Exception e) {
