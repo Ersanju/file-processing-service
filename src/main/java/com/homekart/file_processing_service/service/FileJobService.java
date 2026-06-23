@@ -3,6 +3,7 @@ package com.homekart.file_processing_service.service;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,6 +20,7 @@ public class FileJobService {
     private final S3Service s3Service;
     private final FileJobRepository fileJobRepository;
     private final FileProcessingQueue queue;
+    private final ProcessingService processingService;
 
     public String uploadFile(MultipartFile file) throws IOException {
 
@@ -64,7 +66,24 @@ public class FileJobService {
 
             System.out.println("Processing started for job: " + jobId);
 
-            Thread.sleep(30000);
+            CompletableFuture<String> metadataTask = CompletableFuture.supplyAsync(
+                    () -> processingService.extractMetadata(jobId));
+
+            CompletableFuture<String> virusTask = CompletableFuture.supplyAsync(
+                    () -> processingService.scanFile(jobId));
+
+            CompletableFuture<String> thumbnailTask = CompletableFuture.supplyAsync(
+                    () -> processingService.generateThumbnail(jobId));
+
+            CompletableFuture.allOf(
+                    metadataTask,
+                    virusTask,
+                    thumbnailTask).join();
+
+            System.out.println(metadataTask.join());
+            System.out.println(virusTask.join());
+            System.out.println(thumbnailTask.join());
+
             fileJob.setStatus("COMPLETED");
             fileJob.setProcessedTime(LocalDateTime.now());
             fileJobRepository.update(fileJob);
