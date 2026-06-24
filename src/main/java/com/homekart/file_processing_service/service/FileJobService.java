@@ -24,6 +24,7 @@ public class FileJobService {
     private final ProcessingMetrics processingMetrics;
     private final ReportService reportService;
     private final ChunkProcessingService chunkProcessingService;
+    private final CyclicBarrierService cyclicBarrierService;
 
     public String uploadFile(MultipartFile file) throws IOException {
 
@@ -111,7 +112,9 @@ public class FileJobService {
             // Large File Chunk Processing
             // ==================================================
 
-            chunkProcessingService.processChunks(jobId);
+            // chunkProcessingService.processChunks(jobId);
+
+            cyclicBarrierService.processChunksWithBarrier(jobId);
 
             fileJob.setStatus("COMPLETED");
             fileJob.setProcessedTime(LocalDateTime.now());
