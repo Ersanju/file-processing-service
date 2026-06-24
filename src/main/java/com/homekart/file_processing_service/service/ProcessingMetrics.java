@@ -21,4 +21,8 @@ public class ProcessingMetrics {
         return processedFiles.get();
     }
 
+    public int getCount() {
+        return processedFiles.get();
+    }
+
 }
