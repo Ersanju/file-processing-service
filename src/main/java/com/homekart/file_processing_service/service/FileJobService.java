@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.UUID;
 // import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,6 +29,8 @@ public class FileJobService {
     // private final CyclicBarrierService cyclicBarrierService;
     // private final SemaphoreService semaphoreService;
     private final AsyncProcessingService asyncProcessingService;
+    private final CallableProcessingService callableProcessingService;
+    private final ExecutorService executorService;
 
     public String uploadFile(MultipartFile file) throws IOException {
 
@@ -82,13 +86,16 @@ public class FileJobService {
             // Metadata + Virus Scan + Thumbnail
             // ==================================================
 
-            // CompletableFuture<String> metadataTask = CompletableFuture.supplyAsync(
+            // CompletableFuture<String> metadataTask =
+            // CompletableFuture.supplyAsync(
             // () -> processingService.extractMetadata(jobId));
 
-            // CompletableFuture<String> virusTask = CompletableFuture.supplyAsync(
+            // CompletableFuture<String> virusTask =
+            // CompletableFuture.supplyAsync(
             // () -> processingService.scanFile(jobId));
 
-            // CompletableFuture<String> thumbnailTask = CompletableFuture.supplyAsync(
+            // CompletableFuture<String> thumbnailTask =
+            // CompletableFuture.supplyAsync(
             // () -> processingService.generateThumbnail(jobId));
 
             // CompletableFuture.allOf(
@@ -103,8 +110,6 @@ public class FileJobService {
 
             // reportService.generateReport(jobId);
 
-            // semaphoreService.access3(jobId);
-
             // ==================================================
             // Phase 10 - ReentrantLock + tryLock
             // ==================================================
@@ -113,12 +118,39 @@ public class FileJobService {
 
             // ==================================================
             // Phase 12 - CountDownLatch
-            // Large File Chunk Processing
             // ==================================================
 
             // chunkProcessingService.processChunks(jobId);
 
+            // ==================================================
+            // Phase 13 - CyclicBarrier
+            // ==================================================
+
             // cyclicBarrierService.processChunksWithBarrier(jobId);
+
+            // ==================================================
+            // Phase 14 - Semaphore
+            // ==================================================
+
+            // semaphoreService.accessS3(jobId);
+
+            // ==================================================
+            // Phase 15 - Spring Async
+            // ==================================================
+
+            asyncProcessingService.sendNotification(jobId);
+
+            // ==================================================
+            // Phase 17 - Callable & Future
+            // ==================================================
+
+            Future<String> metadataFuture = executorService.submit(
+                    callableProcessingService.metaDataTask(jobId));
+
+            String metadataResult = metadataFuture.get();
+
+            System.out.println(
+                    "Future result : " + metadataResult);
 
             fileJob.setStatus("COMPLETED");
             fileJob.setProcessedTime(LocalDateTime.now());
@@ -129,7 +161,6 @@ public class FileJobService {
             // Phase 8 - AtomicInteger
             // ==================================================
 
-            asyncProcessingService.sendNotification(jobId);
             processingMetrics.increment();
 
         } catch (Exception e) {
@@ -143,5 +174,4 @@ public class FileJobService {
             e.printStackTrace();
         }
     }
-
 }
